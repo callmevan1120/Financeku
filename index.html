@@ -15,6 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Library SheetJS untuk Export XLSX Asli -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
       :root {
@@ -396,6 +398,7 @@
         display: flex;
         justify-content: flex-end;
         gap: 10px;
+        flex-wrap: wrap;
       }
       .toast-container {
         position: fixed;
@@ -439,6 +442,67 @@
       .text-success {
         color: var(--success) !important;
       }
+
+      /* Custom Dropdown CSS */
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: var(--bg-card);
+        min-width: 220px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .dropdown-content a {
+        color: var(--text-main);
+        padding: 10px 16px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .dropdown-content a:hover {
+        background-color: #f1f5f9;
+      }
+      body.dark-mode .dropdown-content a:hover {
+        background-color: #334155;
+      }
+      .dropdown-content .divider {
+        height: 1px;
+        background-color: var(--border);
+        margin: 4px 0;
+      }
+      .dropdown:hover .dropdown-content {
+        display: block;
+      }
+
+      /* Detail Modal Spec */
+      .detail-row {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .detail-label {
+        width: 140px;
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+      .detail-value {
+        flex: 1;
+        font-size: 14px;
+      }
+
       @media (max-width: 768px) {
         .sidebar {
           transform: translateX(-100%);
@@ -641,8 +705,7 @@
                       <th>Proyek / Media</th>
                       <th>Periode</th>
                       <th>Nilai Kontrak</th>
-                      <th>Status Bayar</th>
-                      <th>Status Proyek</th>
+                      <th>Status</th>
                       <th>Aksi</th>
                     </tr>
                   </thead>
@@ -670,9 +733,7 @@
                       <th>Tanggal</th>
                       <th>Kategori</th>
                       <th>Proyek</th>
-                      <th>Keterangan</th>
                       <th>Nominal</th>
-                      <th>Bukti</th>
                       <th>Aksi</th>
                     </tr>
                   </thead>
@@ -699,9 +760,7 @@
                     <tr>
                       <th>Tanggal</th>
                       <th>Kategori</th>
-                      <th>Keterangan</th>
                       <th>Nominal</th>
-                      <th>Nota</th>
                       <th>Aksi</th>
                     </tr>
                   </thead>
@@ -715,12 +774,49 @@
             <div class="card no-print">
               <div class="card-header">
                 <h4 class="card-title">Filter Laporan</h4>
-                <div style="display: flex; gap: 10px">
-                  <button class="btn btn-outline" onclick="exportToExcel()">
-                    <i class="fa-solid fa-file-excel"></i> Excel</button
-                  ><button class="btn btn-outline" onclick="exportToPDF()">
-                    <i class="fa-solid fa-file-pdf"></i> PDF
+                <div class="dropdown">
+                  <button class="btn btn-primary">
+                    <i class="fa-solid fa-download"></i> Export Data
                   </button>
+                  <div class="dropdown-content">
+                    <a onclick="exportData('period', 'xlsx')"
+                      ><i
+                        class="fa-solid fa-file-excel"
+                        style="color: green"
+                      ></i>
+                      Periode Ini (Excel)</a
+                    >
+                    <a onclick="exportData('period', 'csv')"
+                      ><i
+                        class="fa-solid fa-file-csv"
+                        style="color: #2563eb"
+                      ></i>
+                      Periode Ini (CSV)</a
+                    >
+                    <a onclick="exportData('period', 'pdf')"
+                      ><i class="fa-solid fa-file-pdf" style="color: red"></i>
+                      Periode Ini (PDF)</a
+                    >
+                    <div class="divider"></div>
+                    <a onclick="exportData('all', 'xlsx')"
+                      ><i
+                        class="fa-solid fa-file-excel"
+                        style="color: green"
+                      ></i>
+                      Semua Data (Excel)</a
+                    >
+                    <a onclick="exportData('all', 'csv')"
+                      ><i
+                        class="fa-solid fa-file-csv"
+                        style="color: #2563eb"
+                      ></i>
+                      Semua Data (CSV)</a
+                    >
+                    <a onclick="exportData('all', 'pdf')"
+                      ><i class="fa-solid fa-file-pdf" style="color: red"></i>
+                      Semua Data (PDF)</a
+                    >
+                  </div>
                 </div>
               </div>
               <div style="display: flex; gap: 15px; flex-wrap: wrap">
@@ -789,6 +885,7 @@
       </main>
     </div>
 
+    <!-- MODAL PROJECT -->
     <div id="projectModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -854,7 +951,7 @@
                 required
                 oninput="formatRupiahInput(this)"
                 inputmode="numeric"
-                placeholder="0,00"
+                placeholder="0"
               />
             </div>
             <div
@@ -896,6 +993,7 @@
       </div>
     </div>
 
+    <!-- MODAL TRANSACTION -->
     <div id="transModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -937,7 +1035,7 @@
                 required
                 oninput="formatRupiahInput(this)"
                 inputmode="numeric"
-                placeholder="0,00"
+                placeholder="0"
               />
             </div>
             <div class="form-group">
@@ -962,6 +1060,23 @@
             ><button type="submit" class="btn btn-primary">Simpan</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- MODAL DETAIL -->
+    <div id="detailModal" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="card-title" id="detailModalTitle">Detail Data</h3>
+          <button
+            class="btn-outline btn-sm"
+            onclick="closeModal('detailModal')"
+          >
+            <i class="fa-solid fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body" id="detailModalBody"></div>
+        <div class="modal-footer" id="detailModalFooter"></div>
       </div>
     </div>
 
@@ -992,8 +1107,6 @@
 
       let db;
       let useLocalStorage = true;
-
-      // Inisialisasi Database dengan Fallback ke Memori jika LocalStorage diblokir (Sandbox)
       try {
         const testKey = "__test__";
         localStorage.setItem(testKey, testKey);
@@ -1002,27 +1115,17 @@
           JSON.parse(localStorage.getItem(DB_KEY)) ||
           JSON.parse(JSON.stringify(initialData));
       } catch (e) {
-        console.warn(
-          "LocalStorage diblokir. Menggunakan in-memory storage.",
-          e,
-        );
         db = JSON.parse(JSON.stringify(initialData));
         useLocalStorage = false;
       }
 
       let chartInstance = null;
-
       function saveDB() {
         try {
           if (useLocalStorage) {
             localStorage.setItem(DB_KEY, JSON.stringify(db));
           }
-        } catch (e) {
-          console.warn(
-            "Gagal menyimpan ke LocalStorage. Data hanya disimpan di memori.",
-            e,
-          );
-        }
+        } catch (e) {}
       }
 
       function formatRupiah(num) {
@@ -1035,7 +1138,6 @@
           })
         );
       }
-
       function formatRupiahInput(el) {
         let value = el.value.replace(/[^0-9]/g, "");
         if (value === "") {
@@ -1045,7 +1147,6 @@
         let num = parseInt(value, 10);
         el.value = num.toLocaleString("id-ID");
       }
-
       function unformatRupiah(str) {
         if (!str) return 0;
         let clean = str
@@ -1054,16 +1155,14 @@
           .replace(/[^\d.-]/g, "");
         return parseFloat(clean) || 0;
       }
-
       function formatDate(dateStr) {
         if (!dateStr) return "-";
         return new Date(dateStr).toLocaleDateString("id-ID", {
           year: "numeric",
-          month: "short",
+          month: "long",
           day: "numeric",
         });
       }
-
       function generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
       }
@@ -1081,16 +1180,6 @@
 
       document.addEventListener("DOMContentLoaded", () => {
         renderDashboard();
-        if (!useLocalStorage) {
-          setTimeout(
-            () =>
-              showToast(
-                "Browser memblokir LocalStorage. Data hanya disimpan sementara (di memori RAM).",
-                "error",
-              ),
-            1000,
-          );
-        }
       });
 
       function showSection(sectionId, element, event) {
@@ -1176,7 +1265,6 @@
         );
         document.getElementById("dashProjects").textContent =
           db.projects.filter((p) => p.status === "On Progress").length;
-
         const tbody = document.querySelector("#dashRecentTable tbody");
         tbody.innerHTML = "";
         [...db.transactions]
@@ -1264,7 +1352,7 @@
         );
         if (filtered.length === 0) {
           tbody.innerHTML =
-            '<tr><td colspan="7" style="text-align:center;">Tidak ada data proyek</td></tr>';
+            '<tr><td colspan="6" style="text-align:center;">Tidak ada data proyek</td></tr>';
           return;
         }
         filtered.forEach((p) => {
@@ -1274,7 +1362,7 @@
               : p.payStatus === "Belum Bayar"
                 ? "status-danger"
                 : "status-warning";
-          tbody.innerHTML += `<tr><td style="font-weight:600;">${p.client}</td><td><div>${p.name}</div><small style="color:var(--text-muted)">${p.media}</small></td><td>${formatDate(p.start)} - ${formatDate(p.end)}</td><td>${formatRupiah(p.value)}</td><td><span class="status-badge ${statusClass}">${p.payStatus}</span></td><td>${p.status}</td><td><button class="btn-outline btn-sm" onclick="editProject('${p.id}')"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteProject('${p.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+          tbody.innerHTML += `<tr><td style="font-weight:600;">${p.client}</td><td><div>${p.name}</div><small style="color:var(--text-muted)">${p.media}</small></td><td>${formatDate(p.start)} - ${formatDate(p.end)}</td><td>${formatRupiah(p.value)}</td><td><span class="status-badge ${statusClass}">${p.payStatus}</span></td><td><button class="btn-outline btn-sm" onclick="viewProjectDetail('${p.id}')" title="Detail"><i class="fa-solid fa-eye"></i></button> <button class="btn-outline btn-sm" onclick="editProject('${p.id}')" title="Edit"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteProject('${p.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
         });
       }
 
@@ -1285,7 +1373,6 @@
           "Tambah Proyek";
         document.getElementById("projectModal").classList.add("open");
       }
-
       function editProject(id) {
         const p = db.projects.find((x) => x.id === id);
         if (!p) return;
@@ -1305,7 +1392,6 @@
           "Edit Proyek";
         document.getElementById("projectModal").classList.add("open");
       }
-
       function saveProject(e) {
         e.preventDefault();
         try {
@@ -1314,12 +1400,10 @@
           const media = document.getElementById("p_media").value;
           const start = document.getElementById("p_start").value;
           const valueStr = document.getElementById("p_value").value;
-
           if (!client || !name || !media || !start || !valueStr) {
-            showToast("Harap lengkapi bidang yang wajib diisi (*)", "error");
+            showToast("Harap lengkapi bidang wajib (*)", "error");
             return;
           }
-
           const id = document.getElementById("p_id").value;
           const data = {
             id: id || generateId(),
@@ -1333,7 +1417,6 @@
             status: document.getElementById("p_status").value,
             notes: document.getElementById("p_notes").value,
           };
-
           if (id) {
             const index = db.projects.findIndex((x) => x.id === id);
             if (index !== -1) db.projects[index] = data;
@@ -1343,23 +1426,17 @@
           saveDB();
           closeModal("projectModal");
           renderProjects();
-          showToast(
-            id ? "Proyek berhasil diperbarui!" : "Proyek berhasil ditambahkan!",
-          );
+          showToast(id ? "Proyek diperbarui!" : "Proyek ditambahkan!");
         } catch (err) {
-          showToast(
-            "Terjadi kesalahan saat menyimpan: " + err.message,
-            "error",
-          );
+          showToast("Error: " + err.message, "error");
         }
       }
-
       function deleteProject(id) {
         if (confirm("Hapus proyek ini?")) {
           db.projects = db.projects.filter((x) => x.id !== id);
           saveDB();
           renderProjects();
-          showToast("Proyek berhasil dihapus", "error");
+          showToast("Proyek dihapus", "error");
         }
       }
 
@@ -1372,13 +1449,13 @@
           .filter((t) => t.type === type)
           .sort((a, b) => new Date(b.date) - new Date(a.date));
         if (list.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Belum ada transaksi</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Belum ada transaksi</td></tr>`;
           return;
         }
         list.forEach((t) => {
           const proj = db.projects.find((p) => p.id === t.projectId);
-          const projName = proj ? proj.name : type === "in" ? "Umum" : "-";
-          tbody.innerHTML += `<tr><td>${formatDate(t.date)}</td><td>${t.category}</td>${type === "in" ? `<td>${projName}</td>` : ""}<td>${t.description || "-"}</td><td style="font-weight:600;">${formatRupiah(t.amount)}</td><td>${t.file ? '<i class="fa-solid fa-paperclip"></i> ' + t.file : "-"}</td><td><button class="btn-outline btn-sm" onclick="editTransaction('${t.id}')"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteTransaction('${t.id}')"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+          const projName = proj ? proj.name : "Umum";
+          tbody.innerHTML += `<tr><td>${formatDate(t.date)}</td><td>${t.category}</td>${type === "in" ? `<td>${projName}</td>` : ""}<td style="font-weight:600;">${formatRupiah(t.amount)}</td><td><button class="btn-outline btn-sm" onclick="viewTransactionDetail('${t.id}')" title="Detail"><i class="fa-solid fa-eye"></i></button> <button class="btn-outline btn-sm" onclick="editTransaction('${t.id}')" title="Edit"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteTransaction('${t.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
         });
       }
 
@@ -1415,7 +1492,6 @@
           type === "in" ? "Input Pemasukan" : "Input Pengeluaran";
         document.getElementById("transModal").classList.add("open");
       }
-
       function editTransaction(id) {
         const t = db.transactions.find((x) => x.id === id);
         if (!t) return;
@@ -1438,18 +1514,15 @@
         document.getElementById("transModalTitle").textContent =
           "Edit Transaksi";
       }
-
       function saveTransaction(e) {
         e.preventDefault();
         try {
           const date = document.getElementById("t_date").value;
           const amountStr = document.getElementById("t_amount").value;
-
           if (!date || !amountStr) {
-            showToast("Harap lengkapi bidang yang wajib diisi (*)", "error");
+            showToast("Harap lengkapi bidang wajib (*)", "error");
             return;
           }
-
           const id = document.getElementById("t_id").value;
           const type = document.getElementById("t_type").value;
           const fileInput = document.getElementById("t_file");
@@ -1458,7 +1531,6 @@
           if (fileInput.files.length > 0) {
             fileName = fileInput.files[0].name;
           }
-
           const data = {
             id: id || generateId(),
             type,
@@ -1470,7 +1542,6 @@
             description: document.getElementById("t_desc").value,
             file: fileName,
           };
-
           if (id) {
             const index = db.transactions.findIndex((x) => x.id === id);
             if (index !== -1) db.transactions[index] = data;
@@ -1480,21 +1551,13 @@
           saveDB();
           closeModal("transModal");
           renderTransactions(type);
-          showToast(
-            id
-              ? "Transaksi berhasil diperbarui!"
-              : "Transaksi berhasil disimpan!",
-          );
+          showToast(id ? "Transaksi diperbarui!" : "Transaksi ditambahkan!");
           if (document.getElementById("dashboard").classList.contains("active"))
             renderDashboard();
         } catch (err) {
-          showToast(
-            "Terjadi kesalahan saat menyimpan: " + err.message,
-            "error",
-          );
+          showToast("Error: " + err.message, "error");
         }
       }
-
       function deleteTransaction(id) {
         if (confirm("Hapus transaksi ini?")) {
           const trans = db.transactions.find((x) => x.id === id);
@@ -1503,12 +1566,61 @@
           db.transactions = db.transactions.filter((x) => x.id !== id);
           saveDB();
           renderTransactions(type);
-          showToast("Transaksi berhasil dihapus", "error");
+          showToast("Transaksi dihapus", "error");
           if (document.getElementById("dashboard").classList.contains("active"))
             renderDashboard();
         }
       }
 
+      // --- DETAIL MODAL LOGIC ---
+      function viewProjectDetail(id) {
+        const p = db.projects.find((x) => x.id === id);
+        if (!p) return;
+        document.getElementById("detailModalTitle").textContent =
+          `Detail Proyek: ${p.name}`;
+        document.getElementById("detailModalBody").innerHTML = `
+                <div class="detail-row"><div class="detail-label">Nama Klien</div><div class="detail-value">${p.client}</div></div>
+                <div class="detail-row"><div class="detail-label">Jenis Media</div><div class="detail-value">${p.media}</div></div>
+                <div class="detail-row"><div class="detail-label">Periode</div><div class="detail-value">${formatDate(p.start)} s/d ${formatDate(p.end)}</div></div>
+                <div class="detail-row"><div class="detail-label">Nilai Kontrak</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(p.value)}</div></div>
+                <div class="detail-row"><div class="detail-label">Status Bayar</div><div class="detail-value"><span class="status-badge ${p.payStatus === "Lunas" ? "status-success" : "status-danger"}">${p.payStatus}</span></div></div>
+                <div class="detail-row"><div class="detail-label">Status Proyek</div><div class="detail-value">${p.status}</div></div>
+                <div class="detail-row"><div class="detail-label">Catatan</div><div class="detail-value">${p.notes || "-"}</div></div>
+            `;
+        document.getElementById("detailModalFooter").innerHTML = `
+                <button class="btn btn-outline" onclick="closeModal('detailModal')"><i class="fa-solid fa-times"></i> Tutup</button>
+                <button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('project', '${p.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <button class="btn btn-outline" style="color:#2563eb;" onclick="exportSingleItem('project', '${p.id}', 'csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                <button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('project', '${p.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            `;
+        document.getElementById("detailModal").classList.add("open");
+      }
+
+      function viewTransactionDetail(id) {
+        const t = db.transactions.find((x) => x.id === id);
+        if (!t) return;
+        const proj = db.projects.find((p) => p.id === t.projectId);
+        document.getElementById("detailModalTitle").textContent =
+          `Detail Transaksi`;
+        document.getElementById("detailModalBody").innerHTML = `
+                <div class="detail-row"><div class="detail-label">Tanggal</div><div class="detail-value">${formatDate(t.date)}</div></div>
+                <div class="detail-row"><div class="detail-label">Tipe</div><div class="detail-value"><span class="status-badge ${t.type === "in" ? "status-success" : "status-danger"}">${t.type === "in" ? "Pemasukan" : "Pengeluaran"}</span></div></div>
+                <div class="detail-row"><div class="detail-label">Kategori</div><div class="detail-value">${t.category}</div></div>
+                ${t.type === "in" ? `<div class="detail-row"><div class="detail-label">Proyek</div><div class="detail-value">${proj ? proj.name : "Umum"}</div></div>` : ""}
+                <div class="detail-row"><div class="detail-label">Nominal</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(t.amount)}</div></div>
+                <div class="detail-row"><div class="detail-label">Keterangan</div><div class="detail-value">${t.description || "-"}</div></div>
+                <div class="detail-row"><div class="detail-label">Bukti/Nota</div><div class="detail-value">${t.file ? '<i class="fa-solid fa-paperclip"></i> ' + t.file : "-"}</div></div>
+            `;
+        document.getElementById("detailModalFooter").innerHTML = `
+                <button class="btn btn-outline" onclick="closeModal('detailModal')"><i class="fa-solid fa-times"></i> Tutup</button>
+                <button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('transaction', '${t.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                <button class="btn btn-outline" style="color:#2563eb;" onclick="exportSingleItem('transaction', '${t.id}', 'csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                <button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('transaction', '${t.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            `;
+        document.getElementById("detailModal").classList.add("open");
+      }
+
+      // --- REPORTS ---
       function renderReport() {
         const start = document.getElementById("reportStart").value;
         const end = document.getElementById("reportEnd").value;
@@ -1537,95 +1649,131 @@
           totalIn - totalOut >= 0 ? "var(--success)" : "var(--danger)";
       }
 
-      function exportToExcel() {
+      // --- EXPORT LOGIC ---
+      function getExportArray(dataArray, type) {
+        if (type === "project") {
+          return dataArray.map((p) => ({
+            Klien: p.client,
+            Proyek: p.name,
+            Media: p.media,
+            Mulai: p.start,
+            Selesai: p.end,
+            "Nilai (Rp)": p.value,
+            "Status Bayar": p.payStatus,
+            "Status Proyek": p.status,
+            Catatan: p.notes,
+          }));
+        } else {
+          return dataArray.map((t) => ({
+            Tanggal: t.date,
+            Tipe: t.type === "in" ? "Masuk" : "Keluar",
+            Kategori: t.category,
+            Keterangan: t.description,
+            "Masuk (Rp)": t.type === "in" ? t.amount : 0,
+            "Keluar (Rp)": t.type === "out" ? t.amount : 0,
+            Bukti: t.file,
+          }));
+        }
+      }
+
+      function exportData(scope, format) {
         const start = document.getElementById("reportStart").value;
         const end = document.getElementById("reportEnd").value;
-        if (!start || !end) {
+        if (scope === "period" && (!start || !end)) {
           showToast("Pilih periode laporan terlebih dahulu", "error");
           return;
         }
+
+        let data =
+          scope === "all"
+            ? db.transactions
+            : db.transactions.filter((t) => t.date >= start && t.date <= end);
+        let title =
+          scope === "all" ? "Semua_Transaksi" : `Transaksi_${start}_sd_${end}`;
+
+        if (data.length === 0) {
+          showToast("Tidak ada data untuk diunduh", "error");
+          return;
+        }
+
+        if (format === "xlsx")
+          exportToXLSX(getExportArray(data, "transaction"), title);
+        else if (format === "csv")
+          exportToCSV(getExportArray(data, "transaction"), title);
+        else if (format === "pdf")
+          exportToPDFDoc(
+            getExportArray(data, "transaction"),
+            title,
+            scope === "period"
+              ? `Periode: ${formatDate(start)} s/d ${formatDate(end)}`
+              : "Semua Periode",
+          );
+      }
+
+      function exportSingleItem(type, id, format) {
+        let data =
+          type === "project"
+            ? db.projects.filter((x) => x.id === id)
+            : db.transactions.filter((x) => x.id === id);
+        let title =
+          type === "project"
+            ? `Proyek_${data[0].name}`
+            : `Transaksi_${data[0].date}`;
+
+        if (format === "xlsx") exportToXLSX(getExportArray(data, type), title);
+        else if (format === "csv")
+          exportToCSV(getExportArray(data, type), title);
+        else if (format === "pdf")
+          exportToPDFDoc(getExportArray(data, type), title, "Detail Item");
+      }
+
+      function exportToXLSX(dataObj, filename) {
+        const ws = XLSX.utils.json_to_sheet(dataObj);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, filename + ".xlsx");
+        showToast("File Excel (XLSX) berhasil diunduh!");
+      }
+
+      function exportToCSV(dataObj, filename) {
         const BOM = "\uFEFF";
-        let csv = BOM + "Tanggal,Tipe,Kategori,Keterangan,Masuk,Keluar\n";
-        db.transactions
-          .filter((t) => t.date >= start && t.date <= end)
-          .forEach((t) => {
-            csv += `"${formatDate(t.date)}","${t.type === "in" ? "Masuk" : "Keluar"}","${t.category}","${t.description || "-"}",${t.type === "in" ? t.amount : ""},${t.type === "out" ? t.amount : ""}\n`;
-          });
+        let csv = BOM;
+        const headers = Object.keys(dataObj[0]);
+        csv += headers.join(",") + "\n";
+        dataObj.forEach((row) => {
+          csv +=
+            headers
+              .map(
+                (h) =>
+                  `"${row[h] !== undefined && row[h] !== null ? row[h] : ""}"`,
+              )
+              .join(",") + "\n";
+        });
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Laporan_Keuangan_${start}_sd_${end}.csv`;
+        link.download = filename + ".csv";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        showToast("File Excel (CSV) berhasil diunduh!");
+        showToast("File CSV berhasil diunduh!");
       }
 
-      function exportToPDF() {
-        const start = document.getElementById("reportStart").value;
-        const end = document.getElementById("reportEnd").value;
-        if (!start || !end) {
-          showToast("Pilih periode laporan terlebih dahulu", "error");
-          return;
-        }
+      function exportToPDFDoc(dataObj, filename, titleText) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         doc.setFontSize(18);
-        doc.text("Laporan Laba Rugi", 14, 22);
+        doc.text(filename.replace(/_/g, " "), 14, 22);
         doc.setFontSize(12);
-        doc.text(
-          `Periode: ${formatDate(start)} s/d ${formatDate(end)}`,
-          14,
-          30,
-        );
-        const filtered = db.transactions.filter(
-          (t) => t.date >= start && t.date <= end,
-        );
-        const body = filtered.map((t) => [
-          formatDate(t.date),
-          t.type === "in" ? "Masuk" : "Keluar",
-          t.category,
-          t.description || "-",
-          t.type === "in" ? formatRupiah(t.amount) : "-",
-          t.type === "out" ? formatRupiah(t.amount) : "-",
-        ]);
+        doc.text(titleText, 14, 30);
         doc.autoTable({
           startY: 35,
-          head: [
-            [
-              "Tanggal",
-              "Tipe",
-              "Kategori",
-              "Keterangan",
-              "Pemasukan",
-              "Pengeluaran",
-            ],
-          ],
-          body: body,
+          head: [Object.keys(dataObj[0])],
+          body: dataObj.map((row) => Object.values(row)),
           styles: { fontSize: 8, cellPadding: 2 },
           headStyles: { fillColor: [37, 99, 235] },
         });
-        const totalIn = filtered
-          .filter((t) => t.type === "in")
-          .reduce((s, t) => s + Number(t.amount), 0);
-        const totalOut = filtered
-          .filter((t) => t.type === "out")
-          .reduce((s, t) => s + Number(t.amount), 0);
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(11);
-        doc.text(`Total Pemasukan: ${formatRupiah(totalIn)}`, 14, finalY);
-        doc.text(
-          `Total Pengeluaran: ${formatRupiah(totalOut)}`,
-          14,
-          finalY + 7,
-        );
-        doc.setFontSize(13);
-        doc.text(
-          `Laba/Rugi Bersih: ${formatRupiah(totalIn - totalOut)}`,
-          14,
-          finalY + 16,
-        );
-        doc.save(`Laporan_Keuangan_${start}_sd_${end}.pdf`);
+        doc.save(filename + ".pdf");
         showToast("File PDF berhasil diunduh!");
       }
     </script>
