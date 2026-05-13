@@ -15,14 +15,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <!-- Library SheetJS untuk Export XLSX Asli -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
       :root {
         --primary: #2563eb;
         --primary-dark: #1e40af;
-        --secondary: #64748b;
         --success: #10b981;
         --danger: #ef4444;
         --warning: #f59e0b;
@@ -53,8 +51,40 @@
         font-size: 14px;
         transition: var(--transition);
       }
-      .app-container {
+
+      /* LOGIN STYLE */
+      .login-wrapper {
         display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: var(--bg-body);
+        padding: 20px;
+      }
+      .login-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 400px;
+        padding: 40px;
+        border: 1px solid var(--border);
+      }
+      .login-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--primary);
+        color: white;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 20px auto;
+      }
+
+      .app-container {
+        display: none;
         min-height: 100vh;
         overflow-x: hidden;
       }
@@ -145,18 +175,6 @@
         display: flex;
         align-items: center;
         gap: 15px;
-      }
-      .user-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--border);
       }
       .page-content {
         padding: 24px;
@@ -268,9 +286,6 @@
         color: var(--text-main);
         vertical-align: middle;
       }
-      tr:hover td {
-        background-color: rgba(0, 0, 0, 0.01);
-      }
       .status-badge {
         padding: 4px 10px;
         border-radius: 20px;
@@ -289,10 +304,6 @@
       .status-danger {
         background: #fee2e2;
         color: #991b1b;
-      }
-      .status-info {
-        background: #dbeafe;
-        color: #1e40af;
       }
       .btn {
         padding: 8px 16px;
@@ -442,8 +453,6 @@
       .text-success {
         color: var(--success) !important;
       }
-
-      /* Custom Dropdown CSS */
       .dropdown {
         position: relative;
         display: inline-block;
@@ -474,9 +483,6 @@
       .dropdown-content a:hover {
         background-color: #f1f5f9;
       }
-      body.dark-mode .dropdown-content a:hover {
-        background-color: #334155;
-      }
       .dropdown-content .divider {
         height: 1px;
         background-color: var(--border);
@@ -485,8 +491,6 @@
       .dropdown:hover .dropdown-content {
         display: block;
       }
-
-      /* Detail Modal Spec */
       .detail-row {
         display: flex;
         padding: 10px 0;
@@ -502,7 +506,6 @@
         flex: 1;
         font-size: 14px;
       }
-
       @media (max-width: 768px) {
         .sidebar {
           transform: translateX(-100%);
@@ -520,6 +523,55 @@
     </style>
   </head>
   <body>
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="login-wrapper">
+      <div class="login-card" style="text-align: center">
+        <div class="login-logo"><i class="fa-solid fa-chart-pie"></i></div>
+        <h2 style="margin-bottom: 5px">AdFinance</h2>
+        <p
+          style="color: var(--text-muted); margin-bottom: 30px; font-size: 13px"
+        >
+          Silakan login untuk melanjutkan
+        </p>
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group" style="text-align: left">
+            <label class="form-label">Username</label>
+            <input
+              type="text"
+              id="loginUsername"
+              class="form-control"
+              required
+              placeholder="Masukkan username Anda"
+            />
+          </div>
+          <div class="form-group" style="text-align: left">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              id="loginPassword"
+              class="form-control"
+              required
+              placeholder="Masukkan password Anda"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="
+              width: 100%;
+              justify-content: center;
+              padding: 12px;
+              font-size: 15px;
+              margin-top: 10px;
+            "
+          >
+            <i class="fa-solid fa-right-to-bracket"></i> Login
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MAIN APP -->
     <div id="app" class="app-container">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -550,6 +602,13 @@
           <a
             href="javascript:void(0)"
             class="menu-item"
+            onclick="showSection('receivables', this, event)"
+            ><i class="fa-solid fa-hand-holding-dollar" style="width: 20px"></i>
+            Laporan Piutang</a
+          >
+          <a
+            href="javascript:void(0)"
+            class="menu-item"
             onclick="showSection('income', this, event)"
             ><i class="fa-solid fa-arrow-trend-up" style="width: 20px"></i>
             Pemasukan</a
@@ -566,7 +625,7 @@
             class="menu-item"
             onclick="showSection('reports', this, event)"
             ><i class="fa-solid fa-file-invoice-dollar" style="width: 20px"></i>
-            Laporan</a
+            Laporan Keuangan</a
           >
         </nav>
       </aside>
@@ -581,21 +640,28 @@
             <button class="btn-outline btn-sm" onclick="toggleDarkMode()">
               <i class="fa-solid fa-moon"></i>
             </button>
-            <div class="user-info">
-              <div style="text-align: right">
-                <div style="font-weight: 600; font-size: 13px">
-                  Administrator
-                </div>
-                <div style="font-size: 11px; color: var(--text-muted)">
-                  Local Access
-                </div>
+            <div style="text-align: right; margin-right: 10px">
+              <div
+                style="font-weight: 600; font-size: 13px"
+                id="userNameDisplay"
+              >
+                -
               </div>
-              <img
-                src="https://picsum.photos/seed/admin/100/100"
-                alt="User"
-                class="avatar"
-              />
+              <div
+                style="font-size: 11px; color: var(--text-muted)"
+                id="userRoleDisplay"
+              >
+                -
+              </div>
             </div>
+            <button
+              class="btn-outline btn-sm"
+              onclick="handleLogout()"
+              title="Logout"
+              style="color: var(--danger)"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
           </div>
         </header>
 
@@ -701,11 +767,34 @@
                 <table id="projectTable">
                   <thead>
                     <tr>
+                      <th>No. PO</th>
                       <th>Klien</th>
                       <th>Proyek / Media</th>
-                      <th>Periode</th>
                       <th>Nilai Kontrak</th>
-                      <th>Status</th>
+                      <th>Status Bayar</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="receivables" class="section">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">Laporan Piutang (Belum Lunas)</h4>
+              </div>
+              <div class="table-container">
+                <table id="receivablesTable">
+                  <thead>
+                    <tr>
+                      <th>No. PO</th>
+                      <th>Klien</th>
+                      <th>Proyek</th>
+                      <th>Nilai Kontrak</th>
+                      <th>Status Bayar</th>
                       <th>Aksi</th>
                     </tr>
                   </thead>
@@ -842,7 +931,7 @@
             </div>
             <div id="printableArea">
               <div style="text-align: center; margin-bottom: 20px">
-                <h2>Laporan Laba Rugi</h2>
+                <h2>Laporan Arus Kas</h2>
                 <p id="reportPeriodLabel" style="color: var(--text-muted)">
                   Periode: Semua
                 </p>
@@ -857,22 +946,21 @@
                   <h3 class="text-danger" id="reportTotalOut">Rp 0,00</h3>
                 </div>
                 <div class="card" style="text-align: center">
-                  <div class="stat-label">Laba / Rugi Bersih</div>
+                  <div class="stat-label">Saldo Akhir</div>
                   <h3 id="reportNet">Rp 0,00</h3>
                 </div>
               </div>
               <div class="card">
-                <h4 class="card-title">Rincian Transaksi</h4>
+                <h4 class="card-title">Rincian Transaksi & Saldo</h4>
                 <div class="table-container">
                   <table id="reportTable">
                     <thead>
                       <tr>
                         <th>Tanggal</th>
-                        <th>Tipe</th>
-                        <th>Kategori</th>
                         <th>Keterangan</th>
-                        <th>Masuk</th>
-                        <th>Keluar</th>
+                        <th>Pemasukan</th>
+                        <th>Pengeluaran</th>
+                        <th>Saldo</th>
                       </tr>
                     </thead>
                     <tbody></tbody>
@@ -885,7 +973,7 @@
       </main>
     </div>
 
-    <!-- MODAL PROJECT -->
+    <!-- MODAL PROJECT & TRANSACTION & DETAIL (Sama seperti sebelumnya) -->
     <div id="projectModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -900,9 +988,27 @@
         <form id="projectForm" onsubmit="saveProject(event)" novalidate>
           <input type="hidden" id="p_id" />
           <div class="modal-body">
-            <div class="form-group">
-              <label class="form-label">Nama Klien *</label
-              ><input type="text" id="p_client" class="form-control" required />
+            <div
+              style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px"
+            >
+              <div class="form-group">
+                <label class="form-label">No. PO</label
+                ><input
+                  type="text"
+                  id="p_poNumber"
+                  class="form-control"
+                  placeholder="PO-001"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nama Klien *</label
+                ><input
+                  type="text"
+                  id="p_client"
+                  class="form-control"
+                  required
+                />
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">Nama Proyek *</label
@@ -917,9 +1023,6 @@
                 <option>Banner</option>
                 <option>Videotron</option>
                 <option>Sticker</option>
-                <option>Hanging Lighter</option>
-                <option>Wobler</option>
-                <option>Thinplate</option>
                 <option>Event</option>
                 <option>Digital Ads</option>
                 <option>Lainnya</option>
@@ -993,7 +1096,6 @@
       </div>
     </div>
 
-    <!-- MODAL TRANSACTION -->
     <div id="transModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -1003,10 +1105,7 @@
           </button>
         </div>
         <form id="transForm" onsubmit="saveTransaction(event)" novalidate>
-          <input type="hidden" id="t_id" /><input
-            type="hidden"
-            id="t_type"
-          /><input type="hidden" id="t_saved_file" />
+          <input type="hidden" id="t_id" /><input type="hidden" id="t_type" />
           <div class="modal-body">
             <div class="form-group">
               <label class="form-label">Tanggal *</label
@@ -1042,13 +1141,6 @@
               <label class="form-label">Keterangan</label
               ><textarea id="t_desc" class="form-control" rows="2"></textarea>
             </div>
-            <div class="form-group">
-              <label class="form-label">Upload Bukti / Nota</label
-              ><input type="file" id="t_file" class="form-control" /><small
-                id="t_file_info"
-                style="color: var(--warning); font-size: 11px; display: none"
-              ></small>
-            </div>
           </div>
           <div class="modal-footer">
             <button
@@ -1063,7 +1155,6 @@
       </div>
     </div>
 
-    <!-- MODAL DETAIL -->
     <div id="detailModal" class="modal-overlay">
       <div class="modal">
         <div class="modal-header">
@@ -1083,12 +1174,34 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <script>
-      const DB_KEY = "adfinance_db_v1";
-      const initialData = { projects: [], transactions: [] };
+      const DB_KEY = "adfinance_db_v5";
+      const defaultUsers = [
+        {
+          id: 1,
+          username: "admin",
+          password: "@dF1n4nc3_Pr0",
+          role: "admin",
+          name: "Administrator",
+        },
+        {
+          id: 2,
+          username: "staff",
+          password: "St4ff_S3cur3!",
+          role: "staff",
+          name: "Staff Keuangan",
+        },
+      ];
+      const initialData = {
+        users: defaultUsers,
+        projects: [],
+        transactions: [],
+      };
       const incomeCats = [
         "Pembayaran Klien",
         "DP Proyek",
         "Pelunasan",
+        "Kas Umum",
+        "Modal (Penambahan Modal)",
         "Jasa Konsultasi",
         "Lainnya",
       ];
@@ -1107,6 +1220,8 @@
 
       let db;
       let useLocalStorage = true;
+      let currentSessionUser = null; // PERBAIKAN: Menggunakan memori RAM, bukan sessionStorage
+
       try {
         const testKey = "__test__";
         localStorage.setItem(testKey, testKey);
@@ -1118,8 +1233,15 @@
         db = JSON.parse(JSON.stringify(initialData));
         useLocalStorage = false;
       }
+      if (!db.users || !Array.isArray(db.users)) {
+        db.users = defaultUsers;
+      }
+      try {
+        saveDB();
+      } catch (e) {}
 
       let chartInstance = null;
+
       function saveDB() {
         try {
           if (useLocalStorage) {
@@ -1127,7 +1249,6 @@
           }
         } catch (e) {}
       }
-
       function formatRupiah(num) {
         if (isNaN(num) || num === null) num = 0;
         return (
@@ -1166,7 +1287,6 @@
       function generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2);
       }
-
       function showToast(message, type = "success") {
         const container = document.getElementById("toastContainer");
         const toast = document.createElement("div");
@@ -1178,9 +1298,66 @@
         setTimeout(() => toast.remove(), 3500);
       }
 
-      document.addEventListener("DOMContentLoaded", () => {
+      // --- AUTH LOGIC (Tanpa Session/Local Storage untuk Sesi) ---
+      function checkLoginState() {
+        if (currentSessionUser) {
+          showApp();
+        } else {
+          showLogin();
+        }
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const username = document.getElementById("loginUsername").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        const user = db.users.find(
+          (u) => u.username === username && u.password === password,
+        );
+        if (user) {
+          currentSessionUser = {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            name: user.name,
+          };
+          showApp();
+          showToast(`Selamat datang, ${user.name}!`);
+        } else {
+          showToast("Username atau Password salah!", "error");
+        }
+      }
+
+      function handleLogout() {
+        currentSessionUser = null;
+        showLogin();
+        showToast("Anda telah logout.");
+      }
+
+      function showApp() {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("app").style.display = "flex";
+        if (currentSessionUser) {
+          document.getElementById("userNameDisplay").textContent =
+            currentSessionUser.name;
+          document.getElementById("userRoleDisplay").textContent =
+            currentSessionUser.role === "admin"
+              ? "Administrator"
+              : "Staff Keuangan";
+        }
         renderDashboard();
-      });
+      }
+
+      function showLogin() {
+        document.getElementById("loginSection").style.display = "flex";
+        document.getElementById("app").style.display = "none";
+        document.getElementById("loginUsername").value = "";
+        document.getElementById("loginPassword").value = "";
+      }
+
+      // --- INIT ---
+      document.addEventListener("DOMContentLoaded", checkLoginState);
 
       function showSection(sectionId, element, event) {
         if (event) event.preventDefault();
@@ -1195,6 +1372,7 @@
         const titles = {
           dashboard: "Dashboard",
           projects: "Manajemen Proyek",
+          receivables: "Laporan Piutang",
           income: "Pencatatan Pemasukan",
           expense: "Pencatatan Pengeluaran",
           reports: "Laporan Keuangan",
@@ -1202,6 +1380,7 @@
         document.getElementById("pageTitle").textContent = titles[sectionId];
         if (sectionId === "dashboard") renderDashboard();
         if (sectionId === "projects") renderProjects();
+        if (sectionId === "receivables") renderReceivables();
         if (sectionId === "income") renderTransactions("in");
         if (sectionId === "expense") renderTransactions("out");
         if (sectionId === "reports") {
@@ -1275,7 +1454,6 @@
           });
         renderChart();
       }
-
       function renderChart() {
         const ctx = document.getElementById("cashflowChart").getContext("2d");
         const labels = [],
@@ -1362,7 +1540,23 @@
               : p.payStatus === "Belum Bayar"
                 ? "status-danger"
                 : "status-warning";
-          tbody.innerHTML += `<tr><td style="font-weight:600;">${p.client}</td><td><div>${p.name}</div><small style="color:var(--text-muted)">${p.media}</small></td><td>${formatDate(p.start)} - ${formatDate(p.end)}</td><td>${formatRupiah(p.value)}</td><td><span class="status-badge ${statusClass}">${p.payStatus}</span></td><td><button class="btn-outline btn-sm" onclick="viewProjectDetail('${p.id}')" title="Detail"><i class="fa-solid fa-eye"></i></button> <button class="btn-outline btn-sm" onclick="editProject('${p.id}')" title="Edit"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteProject('${p.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+          tbody.innerHTML += `<tr><td>${p.poNumber || "-"}</td><td style="font-weight:600;">${p.client}</td><td><div>${p.name}</div><small style="color:var(--text-muted)">${p.media}</small></td><td>${formatRupiah(p.value)}</td><td><span class="status-badge ${statusClass}">${p.payStatus}</span></td><td><button class="btn-outline btn-sm" onclick="viewProjectDetail('${p.id}')" title="Detail"><i class="fa-solid fa-eye"></i></button> <button class="btn-outline btn-sm" onclick="editProject('${p.id}')" title="Edit"><i class="fa-solid fa-edit"></i></button> <button class="btn-outline btn-sm" style="color: var(--danger);" onclick="deleteProject('${p.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        });
+      }
+
+      function renderReceivables() {
+        const tbody = document.querySelector("#receivablesTable tbody");
+        tbody.innerHTML = "";
+        const unpaid = db.projects.filter((p) => p.payStatus !== "Lunas");
+        if (unpaid.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center;">Tidak ada piutang. Semua proyek lunas!</td></tr>';
+          return;
+        }
+        unpaid.forEach((p) => {
+          let statusClass =
+            p.payStatus === "DP" ? "status-warning" : "status-danger";
+          tbody.innerHTML += `<tr><td>${p.poNumber || "-"}</td><td style="font-weight:600;">${p.client}</td><td>${p.name}</td><td style="font-weight:bold;">${formatRupiah(p.value)}</td><td><span class="status-badge ${statusClass}">${p.payStatus}</span></td><td><button class="btn-outline btn-sm" onclick="viewProjectDetail('${p.id}')" title="Detail"><i class="fa-solid fa-eye"></i></button></td></tr>`;
         });
       }
 
@@ -1377,6 +1571,7 @@
         const p = db.projects.find((x) => x.id === id);
         if (!p) return;
         document.getElementById("p_id").value = p.id;
+        document.getElementById("p_poNumber").value = p.poNumber || "";
         document.getElementById("p_client").value = p.client;
         document.getElementById("p_name").value = p.name;
         document.getElementById("p_media").value = p.media;
@@ -1407,6 +1602,7 @@
           const id = document.getElementById("p_id").value;
           const data = {
             id: id || generateId(),
+            poNumber: document.getElementById("p_poNumber").value.trim(),
             client,
             name,
             media,
@@ -1463,8 +1659,6 @@
         document.getElementById("transForm").reset();
         document.getElementById("t_id").value = "";
         document.getElementById("t_type").value = type;
-        document.getElementById("t_saved_file").value = "";
-        document.getElementById("t_file_info").style.display = "none";
         const catSelect = document.getElementById("t_category");
         catSelect.innerHTML = "";
         (type === "in" ? incomeCats : expenseCats).forEach((c) => {
@@ -1505,12 +1699,6 @@
         document.getElementById("t_desc").value = t.description;
         if (t.type === "in")
           document.getElementById("t_projectId").value = t.projectId || "";
-        if (t.file) {
-          document.getElementById("t_saved_file").value = t.file;
-          document.getElementById("t_file_info").style.display = "block";
-          document.getElementById("t_file_info").textContent =
-            `File lama: ${t.file}`;
-        }
         document.getElementById("transModalTitle").textContent =
           "Edit Transaksi";
       }
@@ -1525,12 +1713,6 @@
           }
           const id = document.getElementById("t_id").value;
           const type = document.getElementById("t_type").value;
-          const fileInput = document.getElementById("t_file");
-          const savedFile = document.getElementById("t_saved_file").value;
-          let fileName = savedFile;
-          if (fileInput.files.length > 0) {
-            fileName = fileInput.files[0].name;
-          }
           const data = {
             id: id || generateId(),
             type,
@@ -1540,7 +1722,6 @@
               type === "in" ? document.getElementById("t_projectId").value : "",
             amount: unformatRupiah(amountStr),
             description: document.getElementById("t_desc").value,
-            file: fileName,
           };
           if (id) {
             const index = db.transactions.findIndex((x) => x.id === id);
@@ -1572,27 +1753,15 @@
         }
       }
 
-      // --- DETAIL MODAL LOGIC ---
       function viewProjectDetail(id) {
         const p = db.projects.find((x) => x.id === id);
         if (!p) return;
         document.getElementById("detailModalTitle").textContent =
           `Detail Proyek: ${p.name}`;
-        document.getElementById("detailModalBody").innerHTML = `
-                <div class="detail-row"><div class="detail-label">Nama Klien</div><div class="detail-value">${p.client}</div></div>
-                <div class="detail-row"><div class="detail-label">Jenis Media</div><div class="detail-value">${p.media}</div></div>
-                <div class="detail-row"><div class="detail-label">Periode</div><div class="detail-value">${formatDate(p.start)} s/d ${formatDate(p.end)}</div></div>
-                <div class="detail-row"><div class="detail-label">Nilai Kontrak</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(p.value)}</div></div>
-                <div class="detail-row"><div class="detail-label">Status Bayar</div><div class="detail-value"><span class="status-badge ${p.payStatus === "Lunas" ? "status-success" : "status-danger"}">${p.payStatus}</span></div></div>
-                <div class="detail-row"><div class="detail-label">Status Proyek</div><div class="detail-value">${p.status}</div></div>
-                <div class="detail-row"><div class="detail-label">Catatan</div><div class="detail-value">${p.notes || "-"}</div></div>
-            `;
-        document.getElementById("detailModalFooter").innerHTML = `
-                <button class="btn btn-outline" onclick="closeModal('detailModal')"><i class="fa-solid fa-times"></i> Tutup</button>
-                <button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('project', '${p.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button>
-                <button class="btn btn-outline" style="color:#2563eb;" onclick="exportSingleItem('project', '${p.id}', 'csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                <button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('project', '${p.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-            `;
+        document.getElementById("detailModalBody").innerHTML =
+          `<div class="detail-row"><div class="detail-label">No. PO</div><div class="detail-value">${p.poNumber || "-"}</div></div><div class="detail-row"><div class="detail-label">Nama Klien</div><div class="detail-value">${p.client}</div></div><div class="detail-row"><div class="detail-label">Jenis Media</div><div class="detail-value">${p.media}</div></div><div class="detail-row"><div class="detail-label">Periode</div><div class="detail-value">${formatDate(p.start)} s/d ${formatDate(p.end)}</div></div><div class="detail-row"><div class="detail-label">Nilai Kontrak</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(p.value)}</div></div><div class="detail-row"><div class="detail-label">Status Bayar</div><div class="detail-value"><span class="status-badge ${p.payStatus === "Lunas" ? "status-success" : "status-danger"}">${p.payStatus}</span></div></div><div class="detail-row"><div class="detail-label">Status Proyek</div><div class="detail-value">${p.status}</div></div><div class="detail-row"><div class="detail-label">Catatan</div><div class="detail-value">${p.notes || "-"}</div></div>`;
+        document.getElementById("detailModalFooter").innerHTML =
+          `<button class="btn btn-outline" onclick="closeModal('detailModal')">Tutup</button><button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('project', '${p.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button><button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('project', '${p.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>`;
         document.getElementById("detailModal").classList.add("open");
       }
 
@@ -1602,25 +1771,13 @@
         const proj = db.projects.find((p) => p.id === t.projectId);
         document.getElementById("detailModalTitle").textContent =
           `Detail Transaksi`;
-        document.getElementById("detailModalBody").innerHTML = `
-                <div class="detail-row"><div class="detail-label">Tanggal</div><div class="detail-value">${formatDate(t.date)}</div></div>
-                <div class="detail-row"><div class="detail-label">Tipe</div><div class="detail-value"><span class="status-badge ${t.type === "in" ? "status-success" : "status-danger"}">${t.type === "in" ? "Pemasukan" : "Pengeluaran"}</span></div></div>
-                <div class="detail-row"><div class="detail-label">Kategori</div><div class="detail-value">${t.category}</div></div>
-                ${t.type === "in" ? `<div class="detail-row"><div class="detail-label">Proyek</div><div class="detail-value">${proj ? proj.name : "Umum"}</div></div>` : ""}
-                <div class="detail-row"><div class="detail-label">Nominal</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(t.amount)}</div></div>
-                <div class="detail-row"><div class="detail-label">Keterangan</div><div class="detail-value">${t.description || "-"}</div></div>
-                <div class="detail-row"><div class="detail-label">Bukti/Nota</div><div class="detail-value">${t.file ? '<i class="fa-solid fa-paperclip"></i> ' + t.file : "-"}</div></div>
-            `;
-        document.getElementById("detailModalFooter").innerHTML = `
-                <button class="btn btn-outline" onclick="closeModal('detailModal')"><i class="fa-solid fa-times"></i> Tutup</button>
-                <button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('transaction', '${t.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button>
-                <button class="btn btn-outline" style="color:#2563eb;" onclick="exportSingleItem('transaction', '${t.id}', 'csv')"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                <button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('transaction', '${t.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-            `;
+        document.getElementById("detailModalBody").innerHTML =
+          `<div class="detail-row"><div class="detail-label">Tanggal</div><div class="detail-value">${formatDate(t.date)}</div></div><div class="detail-row"><div class="detail-label">Tipe</div><div class="detail-value"><span class="status-badge ${t.type === "in" ? "status-success" : "status-danger"}">${t.type === "in" ? "Pemasukan" : "Pengeluaran"}</span></div></div><div class="detail-row"><div class="detail-label">Kategori</div><div class="detail-value">${t.category}</div></div>${t.type === "in" ? `<div class="detail-row"><div class="detail-label">Proyek</div><div class="detail-value">${proj ? proj.name : "Umum"}</div></div>` : ""}<div class="detail-row"><div class="detail-label">Nominal</div><div class="detail-value" style="font-weight:bold;">${formatRupiah(t.amount)}</div></div><div class="detail-row"><div class="detail-label">Keterangan</div><div class="detail-value">${t.description || "-"}</div></div>`;
+        document.getElementById("detailModalFooter").innerHTML =
+          `<button class="btn btn-outline" onclick="closeModal('detailModal')">Tutup</button><button class="btn btn-outline" style="color:green;" onclick="exportSingleItem('transaction', '${t.id}', 'xlsx')"><i class="fa-solid fa-file-excel"></i> Excel</button><button class="btn btn-outline" style="color:red;" onclick="exportSingleItem('transaction', '${t.id}', 'pdf')"><i class="fa-solid fa-file-pdf"></i> PDF</button>`;
         document.getElementById("detailModal").classList.add("open");
       }
 
-      // --- REPORTS ---
       function renderReport() {
         const start = document.getElementById("reportStart").value;
         const end = document.getElementById("reportEnd").value;
@@ -1628,31 +1785,37 @@
         document.getElementById("reportPeriodLabel").textContent =
           `Periode: ${formatDate(start)} s/d ${formatDate(end)}`;
         let totalIn = 0,
-          totalOut = 0;
+          totalOut = 0,
+          currentSaldo = 0;
         const tbody = document.querySelector("#reportTable tbody");
         tbody.innerHTML = "";
-        db.transactions
+        const sorted = db.transactions
           .filter((t) => t.date >= start && t.date <= end)
-          .sort((a, b) => new Date(a.date) - new Date(b.date))
-          .forEach((t) => {
-            if (t.type === "in") totalIn += Number(t.amount);
-            else totalOut += Number(t.amount);
-            tbody.innerHTML += `<tr><td>${formatDate(t.date)}</td><td><span class="status-badge ${t.type === "in" ? "status-success" : "status-danger"}">${t.type === "in" ? "Masuk" : "Keluar"}</span></td><td>${t.category}</td><td>${t.description || "-"}</td><td style="color: var(--success);">${t.type === "in" ? formatRupiah(t.amount) : "-"}</td><td style="color: var(--danger);">${t.type === "out" ? formatRupiah(t.amount) : "-"}</td></tr>`;
-          });
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+        sorted.forEach((t) => {
+          if (t.type === "in") {
+            totalIn += Number(t.amount);
+            currentSaldo += Number(t.amount);
+          } else {
+            totalOut += Number(t.amount);
+            currentSaldo -= Number(t.amount);
+          }
+          tbody.innerHTML += `<tr><td>${formatDate(t.date)}</td><td>${t.category} ${t.description ? "(" + t.description + ")" : ""}</td><td style="color: var(--success);">${t.type === "in" ? formatRupiah(t.amount) : "-"}</td><td style="color: var(--danger);">${t.type === "out" ? formatRupiah(t.amount) : "-"}</td><td style="font-weight:600;">${formatRupiah(currentSaldo)}</td></tr>`;
+        });
         document.getElementById("reportTotalIn").textContent =
           formatRupiah(totalIn);
         document.getElementById("reportTotalOut").textContent =
           formatRupiah(totalOut);
         const netEl = document.getElementById("reportNet");
-        netEl.textContent = formatRupiah(totalIn - totalOut);
+        netEl.textContent = formatRupiah(currentSaldo);
         netEl.style.color =
-          totalIn - totalOut >= 0 ? "var(--success)" : "var(--danger)";
+          currentSaldo >= 0 ? "var(--success)" : "var(--danger)";
       }
 
-      // --- EXPORT LOGIC ---
       function getExportArray(dataArray, type) {
         if (type === "project") {
           return dataArray.map((p) => ({
+            "No. PO": p.poNumber || "-",
             Klien: p.client,
             Proyek: p.name,
             Media: p.media,
@@ -1664,15 +1827,19 @@
             Catatan: p.notes,
           }));
         } else {
-          return dataArray.map((t) => ({
-            Tanggal: t.date,
-            Tipe: t.type === "in" ? "Masuk" : "Keluar",
-            Kategori: t.category,
-            Keterangan: t.description,
-            "Masuk (Rp)": t.type === "in" ? t.amount : 0,
-            "Keluar (Rp)": t.type === "out" ? t.amount : 0,
-            Bukti: t.file,
-          }));
+          let saldo = 0;
+          return dataArray
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .map((t) => {
+              saldo += t.type === "in" ? Number(t.amount) : -Number(t.amount);
+              return {
+                Tanggal: t.date,
+                Keterangan: `${t.category} ${t.description ? "(" + t.description + ")" : ""}`,
+                "Masuk (Rp)": t.type === "in" ? t.amount : 0,
+                "Keluar (Rp)": t.type === "out" ? t.amount : 0,
+                "Saldo (Rp)": saldo,
+              };
+            });
         }
       }
 
@@ -1683,19 +1850,16 @@
           showToast("Pilih periode laporan terlebih dahulu", "error");
           return;
         }
-
         let data =
           scope === "all"
             ? db.transactions
             : db.transactions.filter((t) => t.date >= start && t.date <= end);
         let title =
-          scope === "all" ? "Semua_Transaksi" : `Transaksi_${start}_sd_${end}`;
-
+          scope === "all" ? "Semua_Arus_Kas" : `Arus_Kas_${start}_sd_${end}`;
         if (data.length === 0) {
           showToast("Tidak ada data untuk diunduh", "error");
           return;
         }
-
         if (format === "xlsx")
           exportToXLSX(getExportArray(data, "transaction"), title);
         else if (format === "csv")
@@ -1719,7 +1883,6 @@
           type === "project"
             ? `Proyek_${data[0].name}`
             : `Transaksi_${data[0].date}`;
-
         if (format === "xlsx") exportToXLSX(getExportArray(data, type), title);
         else if (format === "csv")
           exportToCSV(getExportArray(data, type), title);
@@ -1732,9 +1895,8 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Data");
         XLSX.writeFile(wb, filename + ".xlsx");
-        showToast("File Excel (XLSX) berhasil diunduh!");
+        showToast("File Excel berhasil diunduh!");
       }
-
       function exportToCSV(dataObj, filename) {
         const BOM = "\uFEFF";
         let csv = BOM;
@@ -1758,7 +1920,6 @@
         document.body.removeChild(link);
         showToast("File CSV berhasil diunduh!");
       }
-
       function exportToPDFDoc(dataObj, filename, titleText) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
